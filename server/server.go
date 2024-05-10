@@ -73,6 +73,7 @@ func (s *WebsocketServer) serve(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 
 	if id == "" || name == "" {
+		fmt.Println("tried to connect but missing id or name")
 		err = conn.Close()
 		if err != nil {
 			fmt.Println("Close:", err)
