@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/FiveM-Analytics/websocket-server/server"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -39,11 +38,9 @@ func main() {
 
 			CheckOrigin: func(r *http.Request) bool {
 				// For development only !!!
-				return true
 				env := os.Getenv("APP_ENV")
 				switch env {
 				case "local", "dev":
-					fmt.Println("connecting...")
 					return true
 
 				case "staging":
