@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"github.com/FiveM-Analytics/websocket-server/api"
 	"log"
 	"time"
 )
@@ -59,6 +61,24 @@ func (m *Metric) handleMetrics() {
 	}
 }
 
-func (m *Metric) Message(c *Client, payload ServerData) {
+func (m *Metric) Message(c *Client, payload ServerData) error {
+	log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
+	log.Printf("%+v\n", payload)
 
+	for key, value := range payload.Data {
+		sdk := api.NewApi()
+		status, err := sdk.SendMetric(c.Id, map[string]any{
+			"type": key,
+			"data": value,
+		})
+		if err != nil {
+			return err
+		}
+
+		if status != 200 {
+			return fmt.Errorf("send metric err (%d)\n", status)
+		}
+	}
+
+	return nil
 }

@@ -50,6 +50,10 @@ func (api *Api) CheckServer(id string, name string, data any) (int, error) {
 	return status, nil
 }
 
+func (api *Api) SendMetric(id string, data map[string]any) (int, error) {
+	return api.post(fmt.Sprintf("/servers/metrics/%s", id), nil, data)
+}
+
 //func (api *Api) get(url string) {
 //	url, _ = strings.CutPrefix(url, "/")
 //	resp, err := http.Get(fmt.Sprintf("%s/%s", api.getBaseUrl(), url))
@@ -74,7 +78,10 @@ func (api *Api) post(url string, respData any, data map[string]any) (int, error)
 		return resp.StatusCode, nil
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(respData)
+	if respData != nil {
+		err = json.NewDecoder(resp.Body).Decode(respData)
+	}
+
 	return resp.StatusCode, err
 }
 

@@ -59,7 +59,7 @@ func (c *Client) Refresh() {
 	}
 }
 
-func (c *Client) ReceiveLoop() {
+func (c *Client) ReceiveLoop(s *WebsocketServer) {
 	sdk := api.NewApi()
 	sdk.Connect(c.Id)
 	log.Printf("[%s] Client (%s) connected", c.Conn.RemoteAddr(), c.Id)
@@ -91,7 +91,8 @@ func (c *Client) ReceiveLoop() {
 			continue
 		}
 
-		log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
-		log.Printf("%+v\n", data)
+		if err := s.Metric.Message(c, data); err != nil {
+			log.Println(err)
+		}
 	}
 }

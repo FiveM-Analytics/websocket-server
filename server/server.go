@@ -95,5 +95,5 @@ func (s *WebsocketServer) serve(w http.ResponseWriter, r *http.Request) {
 	s.Clients = append(s.Clients, client)
 
 	go client.Refresh()
-	go client.ReceiveLoop()
+	go client.ReceiveLoop(s)
 }
