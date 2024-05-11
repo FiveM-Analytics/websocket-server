@@ -72,12 +72,12 @@ func (c *Client) ReceiveLoop() {
 		}
 	}()
 
-	//c.Conn.SetReadLimit(maxMessageSize)
-	//_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-	//c.Conn.SetPongHandler(func(string) error {
-	//	_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-	//	return nil
-	//})
+	c.Conn.SetReadLimit(maxMessageSize)
+	_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.Conn.SetPongHandler(func(string) error {
+		_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 
 	for {
 		var data ServerData
@@ -91,5 +91,7 @@ func (c *Client) ReceiveLoop() {
 			continue
 		}
 
+		log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
+		log.Printf("%+v\n", data)
 	}
 }
