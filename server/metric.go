@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/FiveM-Analytics/websocket-server/api"
 	"log"
@@ -42,29 +43,36 @@ type MetricRequest struct {
 }
 
 func (m *Metric) handleMetrics() {
-	for _, client := range m.Server.Clients {
-		if client.Preferences != nil {
-			for metric, enabled := range client.Preferences.Analytics {
-				if enabled {
-					metricRequest := &MetricRequest{
-						Type: metric,
-					}
+	for client, ok := range m.Server.Clients {
+		if ok {
+			if client.Preferences != nil {
+				for metric, enabled := range client.Preferences.Analytics {
+					if enabled {
+						metricRequest := &MetricRequest{
+							Type: metric,
+						}
 
-					if err := client.Conn.WriteJSON(metricRequest); err != nil {
-						log.Println("write err", err)
-						continue
+						client.send <- metricRequest
 					}
 				}
 			}
 		}
-
 	}
 }
 
-func (m *Metric) Message(c *Client, payload ServerData) error {
-	log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
-	log.Printf("%+v\n", payload)
+type MetricMessage struct {
+	Data map[string]any `json:"data"`
+}
 
+func (m *Metric) Message(c *Client, message []byte) error {
+	log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
+
+	var payload MetricMessage
+	if err := json.Unmarshal(message, &payload); err != nil {
+		log.Printf("unmarshal err: %v\n", err)
+	}
+
+	log.Printf("%+v\n", payload)
 	for key, value := range payload.Data {
 		sdk := api.NewApi()
 		status, err := sdk.SendMetric(c.Id, map[string]any{

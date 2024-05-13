@@ -18,12 +18,21 @@ type WebsocketServer struct {
 	WebsocketServerOpts
 	Metric *Metric
 
-	Clients []*Client
+	Clients    map[*Client]bool
+	Register   chan *Client
+	Unregister chan *Client
+	Dispatch   chan *ClientMessage
+
+	quitch chan struct{}
 }
 
 func NewWebsocketServer(serverOpts WebsocketServerOpts, metricOpts MetricOpts) *WebsocketServer {
 	s := &WebsocketServer{
 		WebsocketServerOpts: serverOpts,
+		Clients:             make(map[*Client]bool),
+		Register:            make(chan *Client),
+		Unregister:          make(chan *Client),
+		Dispatch:            make(chan *ClientMessage),
 	}
 
 	s.Metric = NewMetric(s, metricOpts)
@@ -35,10 +44,36 @@ func (s *WebsocketServer) routes() {
 	http.HandleFunc("/metrics", s.serve)
 }
 
+func (s *WebsocketServer) Listen() {
+
+	for {
+		select {
+		case <-s.quitch:
+			log.Println("Gracefully shutting down...")
+			break
+		case client := <-s.Register:
+			log.Printf("[%s] Client (%s) connected\n", client.Conn.RemoteAddr(), client.Id)
+			s.Clients[client] = true
+		case client := <-s.Unregister:
+			if _, ok := s.Clients[client]; ok {
+				log.Printf("[%s] Client (%s) disconnected\n", client.Conn.RemoteAddr(), client.Id)
+				delete(s.Clients, client)
+			}
+		case message := <-s.Dispatch:
+			log.Printf("[%s] Client send (%d) bytes message\n", message.Client.Conn.RemoteAddr(), len(message.Message))
+
+			if err := s.Metric.Message(message.Client, message.Message); err != nil {
+				log.Println(err)
+			}
+		}
+	}
+}
+
 func (s *WebsocketServer) Run() error {
 	s.routes()
 
 	go s.Metric.MainLoop()
+	go s.Listen()
 
 	sslCertPath := os.Getenv("SSL_CERT_PATH")
 	sslKeyPath := os.Getenv("SSL_KEY_PATH")
@@ -81,7 +116,7 @@ func (s *WebsocketServer) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := NewClient(id, name, conn)
+	client := NewClient(s, id, name, conn)
 
 	middleware := NewMiddleware(ServerMiddleware)
 	if err = middleware.Check(client); err != nil {
@@ -92,8 +127,8 @@ func (s *WebsocketServer) serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Clients = append(s.Clients, client)
-
+	s.Register <- client
 	go client.Refresh()
-	go client.ReceiveLoop(s)
+	go client.ReceiveLoop()
+	go client.WriteLoop()
 }
