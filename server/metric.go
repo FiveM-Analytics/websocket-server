@@ -29,33 +29,36 @@ func NewMetric(s *WebsocketServer, opts MetricOpts) *Metric {
 	}
 }
 
-func (m *Metric) MainLoop() {
-
-	for {
-		go m.handleMetrics()
-
-		time.Sleep(m.Interval)
-	}
-}
-
 type MetricRequest struct {
 	Type string `json:"type"`
 }
 
-func (m *Metric) handleMetrics() {
-	for client, ok := range m.Server.Clients {
-		if ok {
-			if client.Preferences != nil {
-				for metric, enabled := range client.Preferences.Analytics {
-					if enabled {
-						metricRequest := &MetricRequest{
-							Type: metric,
-						}
+func (m *Metric) Client(client *Client) {
+	if client.Preferences != nil {
+		for metric, analytics := range client.Preferences.Analytics {
+			go m.handleMetricLoop(client, metric, analytics)
+		}
+	}
+}
 
-						client.send <- metricRequest
-					}
-				}
+func (m *Metric) handleMetricLoop(client *Client, metric string, analytics *ClientAnalytics) {
+	for {
+		if analytics.Enabled {
+			metricRequest := &MetricRequest{
+				Type: metric,
 			}
+
+			client.send <- metricRequest
+		} else {
+			time.Sleep(m.Interval)
+		}
+
+		duration, err := time.ParseDuration(fmt.Sprintf("%dms", analytics.Interval))
+		if err != nil {
+			time.Sleep(m.Interval)
+		} else {
+			fmt.Printf("[Metric] %s: %d\n", metric, analytics.Interval)
+			time.Sleep(duration)
 		}
 	}
 }

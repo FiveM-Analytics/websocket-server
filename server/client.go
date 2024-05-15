@@ -32,7 +32,12 @@ type ClientData struct {
 }
 
 type ClientPreferences struct {
-	Analytics map[string]bool `json:"analytics"`
+	Analytics map[string]*ClientAnalytics `json:"analytics"`
+}
+
+type ClientAnalytics struct {
+	Enabled  bool `json:"enabled"`
+	Interval int  `json:"interval"`
 }
 
 type ClientMessage struct {
@@ -126,7 +131,6 @@ func (c *Client) ReceiveLoop() {
 	}()
 
 	sdk.Connect(c.Id)
-	log.Printf("[%s] Client (%s) connected", c.Conn.RemoteAddr(), c.Id)
 
 	c.Conn.SetReadLimit(maxMessageSize)
 	_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))

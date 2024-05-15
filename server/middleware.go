@@ -40,6 +40,9 @@ func ServerMiddleware(c *Client) error {
 
 	if status == 200 || status == 201 {
 		c.ClientData = clientData
+		for key, data := range c.ClientData.Preferences.Analytics {
+			fmt.Printf("[Middleware] %s: %d\n", key, data.Interval)
+		}
 		return nil
 	}
 

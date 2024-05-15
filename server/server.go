@@ -72,7 +72,6 @@ func (s *WebsocketServer) Listen() {
 func (s *WebsocketServer) Run() error {
 	s.routes()
 
-	go s.Metric.MainLoop()
 	go s.Listen()
 
 	sslCertPath := os.Getenv("SSL_CERT_PATH")
@@ -128,6 +127,7 @@ func (s *WebsocketServer) serve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.Register <- client
+	go s.Metric.Client(client)
 	go client.Refresh()
 	go client.ReceiveLoop()
 	go client.WriteLoop()
