@@ -85,7 +85,7 @@ func (c *Client) WriteLoop() {
 		case message, ok := <-c.send:
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-
+				return
 			}
 			w, err := c.Conn.NextWriter(websocket.TextMessage)
 			if err != nil {

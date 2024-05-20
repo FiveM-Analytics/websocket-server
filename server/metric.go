@@ -69,6 +69,7 @@ type MetricMessage struct {
 
 func (m *Metric) Message(c *Client, message []byte) error {
 	log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
+	fmt.Println(string(message))
 
 	var payload MetricMessage
 	if err := json.Unmarshal(message, &payload); err != nil {
