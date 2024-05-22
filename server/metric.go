@@ -74,6 +74,7 @@ func (m *Metric) Message(c *Client, message []byte) error {
 	var payload MetricMessage
 	if err := json.Unmarshal(message, &payload); err != nil {
 		log.Printf("unmarshal err: %v\n", err)
+		return err
 	}
 
 	log.Printf("%+v\n", payload)
