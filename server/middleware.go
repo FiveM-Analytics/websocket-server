@@ -39,8 +39,14 @@ func ServerMiddleware(c *Client) error {
 	}
 
 	if status == 200 || status == 201 {
-		c.refreshed <- clientData
-		//c.ClientData = clientData
+		if c.ClientData.Id != "" {
+			fmt.Println("sending data")
+			c.refreshed <- &clientData
+			fmt.Println("done sending data")
+		} else {
+			c.ClientData = clientData
+		}
+
 		//if c.ClientData.Preferences != nil {
 		//	// TODO: refresht niet
 		//	for key, data := range c.ClientData.Preferences.Analytics {

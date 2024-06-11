@@ -23,7 +23,7 @@ type Client struct {
 	Server *WebsocketServer
 	ClientData
 	send      chan interface{}
-	refreshed chan ClientData
+	refreshed chan *ClientData
 }
 
 type ClientData struct {
@@ -53,6 +53,7 @@ func NewClient(s *WebsocketServer, id string, name string, conn *websocket.Conn)
 		Conn:        conn,
 		Server:      s,
 		send:        make(chan interface{}),
+		refreshed:   make(chan *ClientData),
 	}
 }
 

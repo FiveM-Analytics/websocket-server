@@ -39,6 +39,23 @@ func (m *Metric) Client(client *Client) {
 			go m.handleMetricLoop(client, metric, analytics)
 		}
 	}
+
+	for {
+		select {
+		case <-m.Server.quitch:
+			return
+		case c := <-client.refreshed:
+			fmt.Println("client refreshed")
+			client.ClientData = *c
+			if client.Preferences != nil {
+				fmt.Println("RESENDING")
+				for metric, analytics := range client.Preferences.Analytics {
+					go m.handleMetricLoop(client, metric, analytics)
+				}
+			}
+		}
+	}
+
 }
 
 func (m *Metric) handleMetricLoop(client *Client, metric string, analytics *ClientAnalytics) {
@@ -46,8 +63,9 @@ func (m *Metric) handleMetricLoop(client *Client, metric string, analytics *Clie
 		select {
 		case <-m.Server.quitch:
 			return
-		case c := <-client.refreshed:
-			client.ClientData = c
+		case _ = <-client.refreshed:
+			fmt.Println("client dead")
+			return
 		default:
 			if analytics.Enabled {
 				metricRequest := &MetricRequest{
