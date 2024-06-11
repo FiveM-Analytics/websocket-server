@@ -94,16 +94,12 @@ type MetricMessage struct {
 }
 
 func (m *Metric) Message(c *Client, message []byte) error {
-	log.Printf("[%s] recv new message\n", c.Conn.RemoteAddr())
-	fmt.Println(string(message))
-
 	var payload MetricMessage
 	if err := json.Unmarshal(message, &payload); err != nil {
 		log.Printf("unmarshal err: %v\n", err)
 		return err
 	}
 
-	log.Printf("%+v\n", payload)
 	for key, value := range payload.Data {
 		sdk := api.NewApi()
 		status, err := sdk.SendMetric(c.Id, map[string]any{
