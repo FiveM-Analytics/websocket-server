@@ -1,3 +1,5 @@
+DOCKER_CONTAINER=fivem-server-analytics-websocket-server
+DOCKER_IMAGE=fivem-server-analytics
 
 build:
 	@go build -o bin/fsa
@@ -10,5 +12,6 @@ test:
 
 
 docker:
-	@docker build -t fivem-server-analytics .
-	@docker run -d -p 5000:5000 --name fivem-server-analytics-websocket-server fivem-server-analytics
+	@docker rm $(DOCKER_CONTAINER) || true
+	@docker build -t $(DOCKER_IMAGE) .
+	@docker run -d -p 5000:5000 --name $(DOCKER_CONTAINER) $(DOCKER_IMAGE)
