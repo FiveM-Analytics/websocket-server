@@ -19,6 +19,6 @@ RUN mkdir -p /app
 ENV TZ=Europe/Amsterdam
 
 COPY --from=builder /app/fivem-server-analytics /app
-COPY --from=builder /app/.env.production /app/.env
+COPY --from=builder /app/.env.production /app
 
 CMD ["/app/fivem-server-analytics"]

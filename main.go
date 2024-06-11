@@ -21,7 +21,10 @@ func main() {
 	// Initialize the environment file
 	err := godotenv.Load(".env")
 	if err != nil {
-		panic(err)
+		err = godotenv.Load("/app/.env.production")
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	port, err := strconv.Atoi(os.Getenv("APP_PORT"))
