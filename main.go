@@ -36,10 +36,11 @@ func main() {
 		Host: os.Getenv("APP_HOST"),
 		Port: port,
 		Upgrade: websocket.Upgrader{
-			ReadBufferSize:  MB * 1,
-			WriteBufferSize: MB * 1,
+			ReadBufferSize:  MB * 16, // pls don't fuck my memory
+			WriteBufferSize: MB * 16,
 
 			CheckOrigin: func(r *http.Request) bool {
+				return true
 				// For development only !!!
 				env := os.Getenv("APP_ENV")
 				switch env {
