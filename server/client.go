@@ -22,7 +22,8 @@ type Client struct {
 	*websocket.Conn
 	Server *WebsocketServer
 	ClientData
-	send chan interface{}
+	send      chan interface{}
+	refreshed chan ClientData
 }
 
 type ClientData struct {

@@ -43,23 +43,31 @@ func (m *Metric) Client(client *Client) {
 
 func (m *Metric) handleMetricLoop(client *Client, metric string, analytics *ClientAnalytics) {
 	for {
-		if analytics.Enabled {
-			metricRequest := &MetricRequest{
-				Type: metric,
+		select {
+		case <-m.Server.quitch:
+			return
+		case c := <-client.refreshed:
+			client.ClientData = c
+		default:
+			if analytics.Enabled {
+				metricRequest := &MetricRequest{
+					Type: metric,
+				}
+
+				client.send <- metricRequest
+			} else {
+				time.Sleep(m.Interval)
 			}
 
-			client.send <- metricRequest
-		} else {
-			time.Sleep(m.Interval)
+			duration, err := time.ParseDuration(fmt.Sprintf("%dms", analytics.Interval))
+			if err != nil {
+				time.Sleep(m.Interval)
+			} else {
+				fmt.Printf("[Metric] %s: %d\n", metric, analytics.Interval)
+				time.Sleep(duration)
+			}
 		}
 
-		duration, err := time.ParseDuration(fmt.Sprintf("%dms", analytics.Interval))
-		if err != nil {
-			time.Sleep(m.Interval)
-		} else {
-			fmt.Printf("[Metric] %s: %d\n", metric, analytics.Interval)
-			time.Sleep(duration)
-		}
 	}
 }
 
